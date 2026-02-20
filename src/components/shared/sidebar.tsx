@@ -39,7 +39,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-[260px] shrink-0 border-r bg-white">
+    <aside className="w-65 shrink-0 border-r bg-white">
       <div className="h-14 flex items-center px-6 font-semibold text-base">
         Tennis Star
       </div>
