@@ -11,9 +11,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useMe } from "@/lib/useMe";
 
 export function Topbar({ breadcrumb }: { breadcrumb: string }) {
   const router = useRouter();
+  const { user, loading } = useMe();
 
   const handleLogout = async () => {
     try {
@@ -32,7 +34,8 @@ export function Topbar({ breadcrumb }: { breadcrumb: string }) {
       console.error("Error de red al cerrar sesión", error);
     }
   };
-
+  const initials =
+    user?.email?.slice(0, 2).toUpperCase() ?? (loading ? ".." : "??");
   return (
     <header className="h-14 bg-white border-b">
       <div className="h-full px-6 flex items-center justify-between">
@@ -47,8 +50,8 @@ export function Topbar({ breadcrumb }: { breadcrumb: string }) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button type="button" className="rounded-full focus:outline-none">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>RI</AvatarFallback>
+            <Avatar className="h-8 w-8">
+                  <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
