@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  const response = NextResponse.json({ ok: true });
+  const res = NextResponse.json({ ok: true });
 
-  response.cookies.set("access_token", "", {
+  // IMPORTANTE: path y flags deben matchear el seteo original del login
+  res.cookies.set({
+    name: "access_token",
+    value: "",
+    path: "/",
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    path: "/",
     maxAge: 0,
   });
 
-  return response;
+  return res;
 }

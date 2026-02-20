@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const nextUrl = searchParams.get("next") || "/ventas";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,34 +23,39 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
-    try {
+try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json();
+        // Mostramos el error real que venga del backend/route handler
         throw new Error(data?.message || "Credenciales inválidas");
       }
 
-      // Si el login fue exitoso, el route handler ya setea la cookie
-      router.push("/ventas");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(err.message);
+      // ✅ Login OK: route handler ya seteó la cookie.
+      // Refresh para que Next/middleware “vea” el nuevo estado
+      router.refresh();
+
+      // Seguridad mínima: solo permitimos rutas internas
+      const safeNext = nextUrl.startsWith("/") ? nextUrl : "/ventas";
+      router.push(safeNext);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error inesperado";
+      setError(message);
     } finally {
       setLoading(false);
     }
   }
 
+
   return (
     <div className="min-h-screen flex items-start justify-center pt-12 px-4">
-      <Card className="w-full max-w-[420px] rounded-xl border shadow-sm">
+      <Card className="w-full max-w-105 rounded-xl border shadow-sm">
         <CardContent className="p-10">
           <div className="flex justify-center mb-6">
             <div className="h-10 w-40 bg-muted rounded-md" />
