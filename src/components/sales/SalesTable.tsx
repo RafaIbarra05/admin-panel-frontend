@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react";
 import { listSales, type Sale } from "@/lib/api/sales";
 
-function formatDate(iso: string) {
+function formatDate(iso?: string | null) {
+  if (!iso) return "—";
   const d = new Date(iso);
   return d.toLocaleDateString("es-AR", {
     day: "2-digit",
@@ -15,9 +16,10 @@ function formatDate(iso: string) {
   });
 }
 
-function formatMoney(value: string) {
-  const n = Number(value);
-  if (Number.isNaN(n)) return value;
+function formatMoney(value?: string | number | null) {
+  if (value == null) return "—";
+  const n = typeof value === "number" ? value : Number(value);
+  if (Number.isNaN(n)) return String(value);
   return n.toLocaleString("es-AR", {
     style: "currency",
     currency: "ARS",
@@ -26,12 +28,10 @@ function formatMoney(value: string) {
 }
 
 function orderCode(id: string) {
-  // Figma usa algo tipo "AB1850E7". Derivamos desde id.
   return id.replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase();
 }
 
 function StatusBadge() {
-  // Backend no trae estado. Placeholder limpio y consistente.
   return (
     <Badge className="bg-[#ffe9cf] text-[#b45309] hover:bg-[#ffe9cf] font-medium">
       En Preparación
@@ -40,7 +40,6 @@ function StatusBadge() {
 }
 
 function PayBadge() {
-  // Backend no trae pago. Placeholder.
   return (
     <Badge className="bg-[#0b1220] text-white hover:bg-[#0b1220] font-medium">
       Pagado
@@ -53,7 +52,6 @@ function getSaleTitle(sale: Sale) {
 }
 
 function getSaleSubtitle(sale: Sale) {
-  // Resumen de items: "3 ítems • Coca Cola, Pepsi"
   const count =
     sale.items?.reduce((acc, it) => acc + (it.quantity ?? 0), 0) ?? 0;
 
@@ -65,7 +63,7 @@ function getSaleSubtitle(sale: Sale) {
   return `${count} ítems • ${namesText}`;
 }
 
-export function SalesTable() {
+export function SalesTable({ refreshKey = 0 }: { refreshKey?: number }) {
   const [q, setQ] = React.useState("");
   const [page, setPage] = React.useState(1);
   const limit = 10;
@@ -93,16 +91,16 @@ export function SalesTable() {
   React.useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  }, [page, refreshKey]);
 
   const filtered = React.useMemo(() => {
     const needle = q.trim().toLowerCase();
     if (!needle) return rows;
 
     return rows.filter((sale) => {
-      const title = getSaleTitle(sale).toLowerCase(); // "venta #XXXX"
-      const subtitle = getSaleSubtitle(sale).toLowerCase(); // "3 ítems • coca cola"
-      const code = orderCode(sale.id).toLowerCase(); // "R70F52U9"
+      const title = getSaleTitle(sale).toLowerCase();
+      const subtitle = getSaleSubtitle(sale).toLowerCase();
+      const code = orderCode(sale.id).toLowerCase();
       return (
         title.includes(needle) ||
         subtitle.includes(needle) ||
@@ -162,7 +160,6 @@ export function SalesTable() {
                   key={sale.id}
                   className="border-b last:border-b-0 hover:bg-[#fafafa] transition-colors"
                 >
-                  {/* Venta */}
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
                       <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-xs font-semibold">
@@ -177,7 +174,6 @@ export function SalesTable() {
                     </div>
                   </td>
 
-                  {/* Orden */}
                   <td className="px-4 py-4">
                     <div className="font-semibold">{orderCode(sale.id)}</div>
                     <div className="text-muted-foreground text-xs">
@@ -185,23 +181,21 @@ export function SalesTable() {
                     </div>
                   </td>
 
-                  {/* Estado */}
                   <td className="px-4 py-5 align-middle">
                     <StatusBadge />
                   </td>
 
-                  {/* Total */}
                   <td className="px-4 py-5 align-middle">
-                    <div className="font-semibold">{formatMoney(sale.total)}</div>
+                    <div className="font-semibold">
+                      {formatMoney(sale.total)}
+                    </div>
                     <div className="text-muted-foreground text-xs">Tarjeta</div>
                   </td>
 
-                  {/* Pago */}
                   <td className="px-4 py-5 align-middle">
                     <PayBadge />
                   </td>
 
-                  {/* Acciones */}
                   <td className="px-4 py-5 align-middle">
                     <button className="text-muted-foreground hover:text-foreground">
                       <Eye className="h-5 w-5" />
@@ -214,7 +208,6 @@ export function SalesTable() {
         </table>
       </div>
 
-      {/* Paginación */}
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm text-muted-foreground">
           Página {page} de {totalPages}

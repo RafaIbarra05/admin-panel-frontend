@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 type DraftItem = {
   productId: string;
@@ -119,29 +120,39 @@ export function CreateSaleDialog({
   }
 
   async function handleSubmit() {
-    try {
-      setError(null);
-      setSubmitting(true);
+  try {
+    setError(null);
+    setSubmitting(true);
 
-      const normalizedItems = validateDraft(items);
+    const normalizedItems = validateDraft(items);
 
-      await createSale({ items: normalizedItems });
+    await createSale({ items: normalizedItems });
 
-      // Reset del form
-      setItems([{ productId: "", quantity: 1 }]);
+    toast.success("Venta creada correctamente", {
+      description: `${normalizedItems.length} producto(s) agregados`,
+    });
 
-      // Cierra modal
-      setOpen(false);
+    // Reset del form
+    setItems([{ productId: "", quantity: 1 }]);
 
-      // Actualiza UI
-      onCreated?.();
-      router.refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo crear la venta.");
-    } finally {
-      setSubmitting(false);
-    }
+    // Cierra modal
+    setOpen(false);
+
+    // Actualiza UI
+    onCreated?.();
+    router.refresh();
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "No se pudo crear la venta.";
+
+    setError(msg);
+
+    toast.error("No se pudo crear la venta", {
+      description: msg,
+    });
+  } finally {
+    setSubmitting(false);
   }
+}
 
   const canSubmit =
     !submitting &&
