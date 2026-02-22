@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 
 import { FormDialog } from "@/components/common/FormDialog";
+import { formatMoneyARS } from "@/lib/format";
 
 type DraftItem = { productId: string; quantity: number };
 
@@ -38,7 +39,7 @@ export function CreateSaleDialog({ open, onOpenChange, onCreated }: Props) {
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // Carga productos solo cuando abre el modal
+  // Carga productos cuando abre el modal
   React.useEffect(() => {
     if (!open) return;
 
@@ -49,7 +50,6 @@ export function CreateSaleDialog({ open, onOpenChange, onCreated }: Props) {
         setError(null);
         setLoadingProducts(true);
 
-        // listProducts devuelve paginado en tu proyecto
         const res = await listProducts({ page: 1, limit: 100 });
         if (!cancelled) setProducts(res.data);
       } catch (e) {
@@ -104,6 +104,29 @@ export function CreateSaleDialog({ open, onOpenChange, onCreated }: Props) {
     }));
   }
 
+  // ===== Preview precios =====
+  const rows = React.useMemo(() => {
+    return items.map((it) => {
+      const product = it.productId
+        ? products.find((x) => x.id === it.productId)
+        : null;
+
+      const unit = product ? Number(product.price) : 0;
+      const subtotal = unit * (Number(it.quantity) || 0);
+
+      return {
+        ...it,
+        product,
+        unit,
+        subtotal,
+      };
+    });
+  }, [items, products]);
+
+  const totalPreview = React.useMemo(() => {
+    return rows.reduce((acc, r) => acc + r.subtotal, 0);
+  }, [rows]);
+
   async function handleSubmit() {
     try {
       setError(null);
@@ -117,13 +140,8 @@ export function CreateSaleDialog({ open, onOpenChange, onCreated }: Props) {
         description: `${normalized.length} producto(s) agregados`,
       });
 
-      // reset
       setItems([{ productId: "", quantity: 1 }]);
-
-      // cerrar
       onOpenChange(false);
-
-      // refrescar tabla/lista
       onCreated?.();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "No se pudo crear la venta.";
@@ -156,15 +174,19 @@ export function CreateSaleDialog({ open, onOpenChange, onCreated }: Props) {
       )}
 
       <div className="space-y-3">
+        {/* Header */}
         <div className="grid grid-cols-12 gap-3 text-sm text-muted-foreground">
-          <div className="col-span-8">Producto</div>
-          <div className="col-span-3">Cantidad</div>
+          <div className="col-span-6">Producto</div>
+          <div className="col-span-2">Cantidad</div>
+          <div className="col-span-2 text-right">Precio</div>
+          <div className="col-span-1 text-right">Subt.</div>
           <div className="col-span-1" />
         </div>
 
-        {items.map((row, idx) => (
+        {rows.map((row, idx) => (
           <div key={idx} className="grid grid-cols-12 gap-3 items-start">
-            <div className="col-span-8">
+            {/* Producto */}
+            <div className="col-span-6">
               <Select
                 value={row.productId || undefined}
                 onValueChange={(v) => updateRow(idx, { productId: v })}
@@ -172,7 +194,11 @@ export function CreateSaleDialog({ open, onOpenChange, onCreated }: Props) {
               >
                 <SelectTrigger className="w-full">
                   <SelectValue
-                    placeholder={loadingProducts ? "Cargando..." : "Seleccionar producto"}
+                    placeholder={
+                      loadingProducts
+                        ? "Cargando..."
+                        : "Seleccionar producto"
+                    }
                   />
                 </SelectTrigger>
 
@@ -186,7 +212,8 @@ export function CreateSaleDialog({ open, onOpenChange, onCreated }: Props) {
               </Select>
             </div>
 
-            <div className="col-span-3">
+            {/* Cantidad */}
+            <div className="col-span-2">
               <Input
                 type="number"
                 min={1}
@@ -199,6 +226,17 @@ export function CreateSaleDialog({ open, onOpenChange, onCreated }: Props) {
               />
             </div>
 
+            {/* Precio */}
+            <div className="col-span-2 text-right pt-2 text-sm text-muted-foreground">
+              {row.product ? formatMoneyARS(row.product.price) : "—"}
+            </div>
+
+            {/* Subtotal */}
+            <div className="col-span-1 text-right pt-2 text-sm font-medium">
+              {row.product ? formatMoneyARS(row.subtotal.toFixed(2)) : "—"}
+            </div>
+
+            {/* Delete */}
             <div className="col-span-1 flex justify-end pt-1">
               <Button
                 type="button"
@@ -224,6 +262,14 @@ export function CreateSaleDialog({ open, onOpenChange, onCreated }: Props) {
           <Plus className="mr-2 h-4 w-4" />
           Agregar ítem
         </Button>
+
+        {/* Total */}
+        <div className="flex items-center justify-between border-t pt-4">
+          <span className="text-sm text-muted-foreground">Total estimado</span>
+          <span className="text-lg font-semibold">
+            {formatMoneyARS(totalPreview.toFixed(2))}
+          </span>
+        </div>
 
         {loadingProducts && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">

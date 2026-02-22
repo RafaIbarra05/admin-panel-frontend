@@ -3,18 +3,25 @@ import { cookies } from "next/headers";
 
 const API_URL = process.env.API_URL!;
 
-export async function GET(_req: Request, ctx: { params: { id: string } }) {
+export async function GET(
+  _req: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
   try {
+    if (!API_URL) {
+      return NextResponse.json({ message: "Missing API_URL" }, { status: 500 });
+    }
+
+    const { id } = await ctx.params;
+
     const token = (await cookies()).get("access_token")?.value;
 
     if (!token) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const res = await fetch(`${API_URL}/sales/${ctx.params.id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const res = await fetch(`${API_URL}/sales/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });
 

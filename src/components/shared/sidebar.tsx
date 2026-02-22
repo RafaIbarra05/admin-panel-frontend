@@ -41,7 +41,7 @@ export function Sidebar() {
   return (
     <aside className="w-65 shrink-0 border-r bg-white">
       <div className="h-14 flex items-center px-6 font-semibold text-base">
-        Tennis Star
+        Ecommerce
       </div>
 
       <nav className="px-3 py-2 space-y-1">
