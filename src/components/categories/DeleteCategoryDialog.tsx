@@ -1,18 +1,11 @@
 "use client";
 
 import * as React from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { deleteCategory } from "@/lib/api/categories";
 import { toast } from "sonner";
+import { deleteCategory } from "@/lib/api/categories";
+import { useMutation } from "@/lib/hooks/useMutation";
+import { getErrorMessage } from "@/lib/api/errors";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
 export function DeleteCategoryDialog({
   open,
@@ -27,41 +20,40 @@ export function DeleteCategoryDialog({
   categoryName: string | null;
   onDeleted: () => void;
 }) {
-  const [loading, setLoading] = React.useState(false);
+  const del = useMutation<void, string>((id) => deleteCategory(id));
 
-  async function handleDelete() {
+  async function handleConfirm() {
     if (!categoryId) return;
 
-    try {
-      setLoading(true);
-      await deleteCategory(categoryId);
-      toast.success("Categoría eliminada");
-      onOpenChange(false);
-      onDeleted();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Error eliminando categoría");
-    } finally {
-      setLoading(false);
+    const { error } = await del.mutate(categoryId);
+
+    if (error) {
+      toast.error(getErrorMessage(error, "Error eliminando categoría"));
+      return;
     }
+
+    toast.success("Categoría eliminada");
+    onOpenChange(false);
+    onDeleted();
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Eliminar categoría</AlertDialogTitle>
-          <AlertDialogDescription>
-            Vas a eliminar <b>{categoryName ?? "esta categoría"}</b>. Esta acción
-            no se puede deshacer.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={loading}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete} disabled={loading}>
-            {loading ? "Eliminando..." : "Eliminar"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmDialog
+      open={open}
+      onOpenChange={(v) => {
+        onOpenChange(v);
+        if (!v) del.setError(null);
+      }}
+      title="Eliminar categoría"
+      description={
+        <>
+          Vas a eliminar <b>{categoryName ?? "esta categoría"}</b>. Esta acción
+          no se puede deshacer.
+        </>
+      }
+      confirmText="Eliminar"
+      loading={del.loading}
+      onConfirm={handleConfirm}
+    />
   );
 }

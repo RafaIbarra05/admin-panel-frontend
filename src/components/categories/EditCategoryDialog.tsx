@@ -1,14 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 import {
@@ -25,7 +18,16 @@ import {
   type Category,
 } from "@/lib/api/categories";
 
+import { useMutation } from "@/lib/hooks/useMutation";
+import { getErrorMessage } from "@/lib/api/errors";
+import { FormDialog } from "../common/FormDialog";
+
 const NONE = "__none__";
+
+type UpdateVars = {
+  id: string;
+  body: { name: string; parentId: string | null };
+};
 
 export function EditCategoryDialog({
   open,
@@ -43,7 +45,10 @@ export function EditCategoryDialog({
 
   const [parents, setParents] = React.useState<Category[]>([]);
   const [loadingParents, setLoadingParents] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
+
+  const update = useMutation<Category, UpdateVars>((vars) =>
+    updateCategory(vars.id, vars.body),
+  );
 
   // precargar inputs cuando abre o cambia la category
   React.useEffect(() => {
@@ -66,76 +71,80 @@ export function EditCategoryDialog({
       }
     }
 
-    if (open) loadParents();
+    if (open) void loadParents();
   }, [open, category?.id]);
 
   async function handleSubmit() {
     if (!category) return;
 
-    try {
-      setLoading(true);
+    const trimmed = name.trim();
+    if (!trimmed) return;
 
-      await updateCategory(category.id, {
-        name: name.trim(),
+    const { error } = await update.mutate({
+      id: category.id,
+      body: {
+        name: trimmed,
         parentId: parentId === NONE ? null : parentId,
-      });
+      },
+    });
 
-      toast.success("Categoría actualizada");
-      onOpenChange(false);
-      onUpdated();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Error actualizando categoría");
-    } finally {
-      setLoading(false);
+    if (error) {
+      toast.error(getErrorMessage(error, "Error actualizando categoría"));
+      return;
+    }
+
+    toast.success("Categoría actualizada");
+    onOpenChange(false);
+    onUpdated();
+  }
+
+  function handleOpenChange(v: boolean) {
+    onOpenChange(v);
+
+    if (!v) {
+      setName("");
+      setParentId(NONE);
+      update.setError(null);
     }
   }
-function handleOpenChange(v: boolean) {
-  onOpenChange(v);
 
-  if (!v) {
-    setName("");
-    setParentId(NONE);
-  }
-}
-  const canSubmit = !!category && !!name.trim() && !loading;
+  const canSubmit = !!category && !!name.trim() && !update.loading;
 
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Editar categoría</DialogTitle>
-        </DialogHeader>
+ return (
+  <FormDialog
+    open={open}
+    onOpenChange={handleOpenChange}
+    title="Editar categoría"
+    canSubmit={canSubmit}
+    loading={update.loading}
+    submitText="Guardar cambios"
+    submittingText="Guardando..."
+    onSubmit={handleSubmit}
+  >
+    <Input
+      placeholder="Nombre de la categoría"
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+    />
 
-        <div className="space-y-4">
-          <Input
-            placeholder="Nombre de la categoría"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+    <Select value={parentId} onValueChange={setParentId}>
+      <SelectTrigger>
+        <SelectValue
+          placeholder={
+            loadingParents ? "Cargando categorías..." : "Categoría padre (opcional)"
+          }
+        />
+      </SelectTrigger>
 
-          <Select value={parentId} onValueChange={setParentId}>
-            <SelectTrigger>
-              <SelectValue
-                placeholder={
-                  loadingParents ? "Cargando categorías..." : "Categoría padre (opcional)"
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NONE}>Sin padre</SelectItem>
-              {parents.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button className="w-full" onClick={handleSubmit} disabled={!canSubmit}>
-            {loading ? "Guardando..." : "Guardar cambios"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+      <SelectContent>
+        <SelectItem value={NONE}>Sin padre</SelectItem>
+        {parents.map((cat) => (
+          <SelectItem key={cat.id} value={cat.id}>
+            {cat.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </FormDialog>
+);
 }

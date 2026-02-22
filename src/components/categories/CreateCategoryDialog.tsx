@@ -23,7 +23,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ApiError } from "@/lib/api/client";
+
+import { useMutation } from "@/lib/hooks/useMutation";
+import { getErrorMessage } from "@/lib/api/errors";
+import { FormDialog } from "../common/FormDialog";
 
 interface Props {
   open: boolean;
@@ -33,13 +36,16 @@ interface Props {
 
 const NONE = "__none__";
 
+type CreateVars = { name: string; parentId?: string };
+
 export function CreateCategoryDialog({ open, onOpenChange, onCreated }: Props) {
   const [name, setName] = React.useState("");
   const [parentId, setParentId] = React.useState<string>(NONE);
 
   const [parents, setParents] = React.useState<Category[]>([]);
-  const [loading, setLoading] = React.useState(false);
   const [loadingParents, setLoadingParents] = React.useState(false);
+
+  const create = useMutation<Category, CreateVars>((vars) => createCategory(vars));
 
   React.useEffect(() => {
     async function loadParents() {
@@ -54,76 +60,79 @@ export function CreateCategoryDialog({ open, onOpenChange, onCreated }: Props) {
       }
     }
 
-    if (open) loadParents();
+    if (open) void loadParents();
   }, [open]);
 
   async function handleSubmit() {
-    try {
-      setLoading(true);
+    const trimmed = name.trim();
+    if (!trimmed) return;
 
-      await createCategory({
-        name: name.trim(),
-        ...(parentId !== NONE ? { parentId } : {}),
-      });
+    const payload: CreateVars =
+      parentId !== NONE ? { name: trimmed, parentId } : { name: trimmed };
 
-      toast.success("Categoría creada correctamente");
+    const { error } = await create.mutate(payload);
+
+    if (error) {
+      toast.error(getErrorMessage(error, "Error creando categoría"));
+      return;
+    }
+
+    toast.success("Categoría creada correctamente");
+    setName("");
+    setParentId(NONE);
+
+    onCreated();
+    onOpenChange(false); // opcional pero recomendado
+  }
+
+  function handleOpenChange(v: boolean) {
+    onOpenChange(v);
+
+    if (!v) {
       setName("");
       setParentId(NONE);
-      onCreated();
-    } catch (e) {
-  const err = e as ApiError;
-  toast.error(err.message);
-  if (err.status === 401) {
-    // opcional: redirigir a login, etc.
-  }
-} finally {
-      setLoading(false);
+      create.setError(null);
     }
   }
 
-  const canSubmit = !!name.trim() && !loading;
+  const canSubmit = !!name.trim() && !create.loading;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Nueva categoría</DialogTitle>
-        </DialogHeader>
+  <FormDialog
+    open={open}
+    onOpenChange={handleOpenChange}
+    title="Nueva categoría"
+    canSubmit={canSubmit}
+    loading={create.loading}
+    submitText="Crear categoría"
+    submittingText="Creando..."
+    onSubmit={handleSubmit}
+  >
+    <Input
+      placeholder="Nombre de la categoría"
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+    />
 
-        <div className="space-y-4">
-          <Input
-            placeholder="Nombre de la categoría"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+    <Select value={parentId} onValueChange={setParentId}>
+      <SelectTrigger>
+        <SelectValue
+          placeholder={
+            loadingParents ? "Cargando categorías..." : "Categoría padre (opcional)"
+          }
+        />
+      </SelectTrigger>
 
-          <Select value={parentId} onValueChange={setParentId}>
-            <SelectTrigger>
-              <SelectValue
-                placeholder={
-                  loadingParents
-                    ? "Cargando categorías..."
-                    : "Categoría padre (opcional)"
-                }
-              />
-            </SelectTrigger>
+      <SelectContent>
+        <SelectItem value={NONE}>Sin padre</SelectItem>
 
-            <SelectContent>
-              <SelectItem value={NONE}>Sin padre</SelectItem>
-
-              {parents.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button className="w-full" onClick={handleSubmit} disabled={!canSubmit}>
-            {loading ? "Creando..." : "Crear categoría"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+        {parents.map((cat) => (
+          <SelectItem key={cat.id} value={cat.id}>
+            {cat.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </FormDialog>
+);
 }

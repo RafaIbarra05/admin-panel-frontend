@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Input } from "@/components/ui/input";
 import { listCategories, type Category } from "@/lib/api/categories";
 import { DeleteCategoryDialog } from "./DeleteCategoryDialog";
 import { EditCategoryDialog } from "./EditCategoryDialog";
