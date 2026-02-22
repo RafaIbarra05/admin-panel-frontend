@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ApiError } from "@/lib/api/client";
 
 interface Props {
   open: boolean;
@@ -70,8 +71,12 @@ export function CreateCategoryDialog({ open, onOpenChange, onCreated }: Props) {
       setParentId(NONE);
       onCreated();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Error creando categoría");
-    } finally {
+  const err = e as ApiError;
+  toast.error(err.message);
+  if (err.status === 401) {
+    // opcional: redirigir a login, etc.
+  }
+} finally {
       setLoading(false);
     }
   }
