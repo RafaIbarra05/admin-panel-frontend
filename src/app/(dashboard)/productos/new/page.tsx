@@ -1,3 +1,5 @@
-export default function NewProductoPage() {
-  return <div>Crear Producto</div>;
+import { ProductFormView } from "@/components/products/ProductFormView";
+
+export default function NewProductPage() {
+  return <ProductFormView mode="create" />;
 }

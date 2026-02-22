@@ -1,14 +1,14 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
+
 import { listProducts, type Product } from "@/lib/api/products";
 import { usePaginatedResource } from "@/lib/hooks/usePaginatedResource";
 import { TableToolbar } from "@/components/common/TableToolbar";
 import { TableStateRows } from "@/components/common/TableStateRows";
 import { PaginationControls } from "@/components/common/PaginationControls";
 import { DeleteProductDialog } from "./DeleteProductDialog";
-import { CreateProductDialog } from "./CreateProductDialog";
-import { EditProductDialog } from "./EditProductDialog";
 
 function formatDate(iso?: string | null) {
   if (!iso) return "—";
@@ -20,11 +20,9 @@ function formatDate(iso?: string | null) {
   });
 }
 
-export function ProductsTable({
-  refreshKey = 0,
-}: {
-  refreshKey?: number;
-}) {
+export function ProductsTable({ refreshKey = 0 }: { refreshKey?: number }) {
+  const router = useRouter();
+
   const [q, setQ] = React.useState("");
 
   const {
@@ -58,7 +56,6 @@ export function ProductsTable({
 
   const [selected, setSelected] = React.useState<Product | null>(null);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
-  const [editOpen, setEditOpen] = React.useState(false);
 
   return (
     <div>
@@ -66,8 +63,7 @@ export function ProductsTable({
         value={q}
         onChange={setQ}
         placeholder="Buscar por producto o categoría..."
-       
-/>
+      />
 
       {error ? (
         <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive mb-4">
@@ -103,13 +99,9 @@ export function ProductsTable({
                   key={product.id}
                   className="border-b last:border-b-0 hover:bg-[#fafafa] transition-colors"
                 >
-                  <td className="px-4 py-4 font-semibold">
-                    {product.name}
-                  </td>
+                  <td className="px-4 py-4 font-semibold">{product.name}</td>
 
-                  <td className="px-4 py-4">
-                    {product.categoryName}
-                  </td>
+                  <td className="px-4 py-4">{product.categoryName}</td>
 
                   <td className="px-4 py-4 font-semibold">
                     ${Number(product.price).toFixed(2)}
@@ -121,25 +113,22 @@ export function ProductsTable({
 
                   <td className="px-4 py-4">
                     <div className="flex gap-3">
-                    <button
-                    className="text-blue-600 text-sm hover:underline"
-                    onClick={() => {
-                        setSelected(product);
-                        setEditOpen(true);
-                    }}
-                    >
-                    Editar
-                    </button>
+                      <button
+                        className="text-blue-600 text-sm hover:underline"
+                        onClick={() => router.push(`/productos/${product.id}/edit`)}
+                      >
+                        Editar
+                      </button>
 
-                    <button
-                    className="text-red-600 text-sm hover:underline"
-                    onClick={() => {
-                        setSelected(product);
-                        setDeleteOpen(true);
-                    }}
-                    >
-                    Eliminar
-                    </button>
+                      <button
+                        className="text-red-600 text-sm hover:underline"
+                        onClick={() => {
+                          setSelected(product);
+                          setDeleteOpen(true);
+                        }}
+                      >
+                        Eliminar
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -155,25 +144,17 @@ export function ProductsTable({
         onPrev={() => setPage((p) => Math.max(1, p - 1))}
         onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
       />
+
       <DeleteProductDialog
-  open={deleteOpen}
-  onOpenChange={setDeleteOpen}
-  productId={selected?.id ?? null}
-  productName={selected?.name ?? null}
-  onDeleted={() => {
-    setSelected(null);
-    refetch();
-  }}
-/>
-<EditProductDialog
-  open={editOpen}
-  onOpenChange={setEditOpen}
-  product={selected}
-  onUpdated={() => {
-    setSelected(null);
-    refetch();
-  }}
-/>
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        productId={selected?.id ?? null}
+        productName={selected?.name ?? null}
+        onDeleted={() => {
+          setSelected(null);
+          refetch();
+        }}
+      />
     </div>
   );
 }

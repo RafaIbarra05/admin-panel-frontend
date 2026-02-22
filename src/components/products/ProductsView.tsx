@@ -1,12 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { ProductsTable } from "./ProductsTable";
-import { CreateProductDialog } from "./CreateProductDialog";
 
 export function ProductsView() {
-  const [createOpen, setCreateOpen] = React.useState(false);
-  const [refreshKey, setRefreshKey] = React.useState(0);
+  const router = useRouter();
 
   return (
     <div>
@@ -20,21 +19,15 @@ export function ProductsView() {
 
         <button
           className="h-9 px-4 rounded-md bg-black text-white text-sm"
-          onClick={() => setCreateOpen(true)}
+          onClick={() => router.push("/productos/new")}
         >
           Nuevo producto
         </button>
       </div>
 
       <div className="mt-6">
-        <ProductsTable refreshKey={refreshKey} />
+        <ProductsTable />
       </div>
-
-      <CreateProductDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onCreated={() => setRefreshKey((k) => k + 1)}
-      />
     </div>
   );
 }

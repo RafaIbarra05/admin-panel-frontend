@@ -6,9 +6,17 @@ export type Product = {
   name: string;
   price: string; // backend lo devuelve como string
   categoryId: string;
-  categoryName: string;
+  position: number;
   createdAt: string;
   updatedAt: string;
+
+  category?: {
+    id: string;
+    name: string;
+  } | null;
+
+  // opcional para la tabla
+  categoryName?: string;
 };
 
 export async function listProducts(
@@ -17,10 +25,18 @@ export async function listProducts(
   const page = params.page ?? 1;
   const limit = params.limit ?? 10;
 
-  return apiFetch<PaginatedResponse<Product>>(
+  const res = await apiFetch<PaginatedResponse<Product>>(
     `/api/products?page=${page}&limit=${limit}`,
     { cache: "no-store" },
   );
+
+  return {
+    ...res,
+    data: res.data.map((p) => ({
+      ...p,
+      categoryName: p.category?.name ?? "—",
+    })),
+  };
 }
 
 export async function createProduct(payload: {
@@ -54,4 +70,18 @@ export async function deleteProduct(id: string) {
   return apiFetch<void>(`/api/products/${id}`, {
     method: "DELETE",
   });
+}
+
+export async function getProductById(id: string) {
+  const res = await fetch(`/api/products/${id}`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.message || "Error obteniendo producto");
+  }
+
+  return res.json();
 }
