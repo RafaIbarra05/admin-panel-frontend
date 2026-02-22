@@ -1,36 +1,57 @@
+import { apiFetch } from "./client";
+import type { PaginatedResponse } from "./types";
+
 export type Product = {
   id: string;
   name: string;
-  price: string; // viene como string desde el backend
+  price: string; // backend lo devuelve como string
   categoryId: string;
   categoryName: string;
   createdAt: string;
   updatedAt: string;
 };
 
-type ApiError = {
-  message?: string;
-};
+export async function listProducts(
+  params: { page?: number; limit?: number } = {},
+) {
+  const page = params.page ?? 1;
+  const limit = params.limit ?? 10;
 
-async function parseJsonSafe<T>(res: Response): Promise<T | null> {
-  try {
-    return (await res.json()) as T;
-  } catch {
-    return null;
-  }
+  return apiFetch<PaginatedResponse<Product>>(
+    `/api/products?page=${page}&limit=${limit}`,
+    { cache: "no-store" },
+  );
 }
 
-export async function listProducts(): Promise<Product[]> {
-  const res = await fetch("/api/products", {
-    method: "GET",
-    cache: "no-store",
+export async function createProduct(payload: {
+  name: string;
+  price: number | string;
+  categoryId: string;
+}) {
+  return apiFetch<Product>("/api/products", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   });
+}
 
-  if (!res.ok) {
-    const err = await parseJsonSafe<ApiError>(res);
-    throw new Error(err?.message ?? "No se pudieron cargar los productos");
-  }
+export async function updateProduct(
+  id: string,
+  body: {
+    name?: string;
+    price?: number | string;
+    categoryId?: string;
+  },
+) {
+  return apiFetch<Product>(`/api/products/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
 
-  const data = await parseJsonSafe<Product[]>(res);
-  return data ?? [];
+export async function deleteProduct(id: string) {
+  return apiFetch<void>(`/api/products/${id}`, {
+    method: "DELETE",
+  });
 }
