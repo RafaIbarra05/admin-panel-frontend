@@ -14,5 +14,17 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
 ]);
+export default [
+  // ...tu config
+  {
+    files: ["src/components/ui/**/*.tsx", "src/components/ui/**/*.ts"],
+    rules: {
+      // apaga la regla que sugiere clases canónicas (tailwindcss plugin)
+      "tailwindcss/classnames-order": "off",
+      "tailwindcss/enforces-shorthand": "off",
+      "tailwindcss/no-custom-classname": "off",
+    },
+  },
+];
 
 export default eslintConfig;

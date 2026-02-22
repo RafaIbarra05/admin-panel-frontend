@@ -1,4 +1,4 @@
-import { CategoriesView } from "@/components/categories/CategoriesView";
+import { CategoriesView } from "@/components/categories";
 
 export default function CategoriasPage() {
   return (

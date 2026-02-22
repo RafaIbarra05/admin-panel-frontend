@@ -58,7 +58,6 @@ export function ProductsTable({
 
   const [selected, setSelected] = React.useState<Product | null>(null);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
-  const [createOpen, setCreateOpen] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
 
   return (
@@ -67,14 +66,7 @@ export function ProductsTable({
         value={q}
         onChange={setQ}
         placeholder="Buscar por producto o categoría..."
-        actions={
-    <button
-      className="h-9 px-4 rounded-md bg-black text-white text-sm"
-      onClick={() => setCreateOpen(true)}
-    >
-      Nuevo producto
-    </button>
-  }
+       
 />
 
       {error ? (
@@ -172,11 +164,6 @@ export function ProductsTable({
     setSelected(null);
     refetch();
   }}
-/>
-<CreateProductDialog
-  open={createOpen}
-  onOpenChange={setCreateOpen}
-  onCreated={() => refetch()}
 />
 <EditProductDialog
   open={editOpen}

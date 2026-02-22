@@ -1,3 +1,5 @@
-export default function ProductosPage() {
-  return <div>Productos</div>;
+import { ProductsView } from "@/components/products";
+
+export default function ProductsPage() {
+  return <ProductsView />;
 }

@@ -3,7 +3,10 @@ import { cookies } from "next/headers";
 
 const API_URL = process.env.API_URL!;
 
-export async function GET(req: Request) {
+export async function PATCH(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
   try {
     const token = (await cookies()).get("access_token")?.value;
 
@@ -11,30 +14,34 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // Reenviar query params (page, limit, etc.)
-    const url = new URL(req.url);
-    const qs = url.searchParams.toString();
-    const upstreamUrl = `${API_URL}/products${qs ? `?${qs}` : ""}`;
+    const { id } = await ctx.params;
+    const body = await req.json();
 
-    const res = await fetch(upstreamUrl, {
+    const res = await fetch(`${API_URL}/products/${id}`, {
+      method: "PATCH",
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify(body),
       cache: "no-store",
     });
 
     const data = await res.json().catch(() => null);
     return NextResponse.json(data, { status: res.status });
   } catch (error) {
-    console.error("[/api/products GET] error:", error);
+    console.error("[/api/products/:id PATCH] error:", error);
     return NextResponse.json(
-      { message: "Error fetching products" },
+      { message: "Error updating product" },
       { status: 500 },
     );
   }
 }
 
-export async function POST(req: Request) {
+export async function DELETE(
+  _req: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
   try {
     const token = (await cookies()).get("access_token")?.value;
 
@@ -42,23 +49,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
+    const { id } = await ctx.params;
 
-    const res = await fetch(`${API_URL}/products`, {
-      method: "POST",
+    const res = await fetch(`${API_URL}/products/${id}`, {
+      method: "DELETE",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(body),
+      cache: "no-store",
     });
+
+    // Si backend devuelve 204, devolvemos 204
+    if (res.status === 204) return new NextResponse(null, { status: 204 });
 
     const data = await res.json().catch(() => null);
     return NextResponse.json(data, { status: res.status });
   } catch (error) {
-    console.error("[/api/products POST] error:", error);
+    console.error("[/api/products/:id DELETE] error:", error);
     return NextResponse.json(
-      { message: "Error creating product" },
+      { message: "Error deleting product" },
       { status: 500 },
     );
   }
