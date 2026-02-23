@@ -3,7 +3,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "Tennis Star Admin",
+  title: "Ecommerce Admin Panel",
   description: "Admin panel",
 };
 
