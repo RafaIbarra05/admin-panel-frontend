@@ -39,7 +39,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-65 shrink-0 border-r bg-white">
+    <aside className="w-65 shrink-0 bg-white">
       <div className="h-14 flex items-center px-6 font-semibold text-base">
         Ecommerce
       </div>
@@ -47,9 +47,7 @@ export function Sidebar() {
       <nav className="px-3 py-2 space-y-1">
         {nav.map((item) => {
           const active =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname.startsWith(item.href);
+            item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
           const Icon = item.icon;
 
@@ -58,9 +56,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted",
-                active && "bg-muted text-foreground"
-              )}
+  "flex items-center gap-3 rounded-lg px-3 py-2 text-[15px] font-medium text-slate-600 transition-colors",
+  "hover:bg-slate-100 hover:text-slate-900",
+  active && "bg-slate-100 text-slate-900"
+)}
             >
               <Icon className="h-4 w-4" />
               {item.label}

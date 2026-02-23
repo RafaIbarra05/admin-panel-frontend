@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60, // 1h (igual que tu JWT)
+    maxAge: 60 * 60,
   });
 
   return response;

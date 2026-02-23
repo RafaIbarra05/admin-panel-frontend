@@ -37,7 +37,7 @@ try {
         throw new Error(data?.message || "Credenciales inválidas");
       }
 
-      // ✅ Login OK: route handler ya seteó la cookie.
+      // Login OK: route handler ya seteó la cookie.
       // Refresh para que Next/middleware “vea” el nuevo estado
       router.refresh();
 
@@ -69,7 +69,7 @@ try {
             Ingresa a tu cuenta para continuar
           </p>
 
-          {/* 👇 FORM REAL */}
+          {/* Formulario de login */}
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Correo electrónico</Label>

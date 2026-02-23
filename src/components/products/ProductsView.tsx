@@ -8,26 +8,24 @@ export function ProductsView() {
   const router = useRouter();
 
   return (
-    <div>
+    <div className="max-w-7xl w-full space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold">Productos</h1>
+        <div className="space-y-1">
+          <h1 className="text-3xl font-semibold tracking-tight">Productos</h1>
           <p className="text-sm text-muted-foreground">
             Gestioná el catálogo de productos del ecommerce.
           </p>
         </div>
 
         <button
-          className="h-9 px-4 rounded-md bg-black text-white text-sm"
+          className="h-9 px-3 rounded-md bg-[#0b1220] text-white text-sm font-medium hover:opacity-90"
           onClick={() => router.push("/productos/new")}
         >
           Nuevo producto
         </button>
       </div>
 
-      <div className="mt-6">
-        <ProductsTable />
-      </div>
+      <ProductsTable />
     </div>
   );
 }

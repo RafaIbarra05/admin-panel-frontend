@@ -19,15 +19,8 @@ export function SalesTable() {
   const [openCreate, setOpenCreate] = React.useState(false);
   const [q, setQ] = React.useState("");
 
-  const {
-    data,
-    meta,
-    loading,
-    error,
-    page,
-    setPage,
-    refetch,
-  } = usePaginatedResource<Sale>(listSales, { initialPage: 1, initialLimit: 10 });
+  const { data, meta, loading, error, page, setPage, refetch } =
+    usePaginatedResource<Sale>(listSales, { initialPage: 1, initialLimit: 10 });
 
   React.useEffect(() => {
     if (error) toast.error(error);
@@ -54,13 +47,14 @@ export function SalesTable() {
   }, [q, data]);
 
   return (
-    <div>
+    <div className="space-y-4">
       <TableToolbar
         value={q}
         onChange={setQ}
         placeholder="Buscar por venta, producto o código..."
         actions={
           <button
+            type="button"
             onClick={() => setOpenCreate(true)}
             className="h-9 px-3 rounded-md bg-[#0b1220] text-white text-sm font-medium hover:opacity-90"
           >
@@ -69,10 +63,10 @@ export function SalesTable() {
         }
       />
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white">
+      <div className="overflow-hidden rounded-xl border border-slate-200/60 bg-white shadow-sm">
         <table className="w-full text-sm">
-          <thead className="bg-[#f9fafb] text-xs uppercase tracking-wide text-muted-foreground">
-            <tr className="border-b">
+          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-muted-foreground">
+            <tr className="border-b border-slate-200/60">
               <th className="text-left font-medium px-4 py-3">Fecha</th>
               <th className="text-left font-medium px-4 py-3">Total</th>
               <th className="text-left font-medium px-4 py-3">Items</th>
@@ -90,40 +84,42 @@ export function SalesTable() {
               emptyText="No hay ventas para mostrar."
             />
 
-            {!loading &&
-              filtered.length > 0 &&
-              filtered.map((sale) => (
-                <tr
-                  key={sale.id}
-                  className="border-b last:border-b-0 hover:bg-[#fafafa] transition-colors"
-                >
-                  <td className="px-4 py-4">{formatDateTime(sale.createdAt)}</td>
+            {!loading && filtered.length > 0
+              ? filtered.map((sale) => (
+                  <tr
+                    key={sale.id}
+                    className="border-b border-slate-200/60 last:border-b-0 hover:bg-slate-50/60 transition-colors"
+                  >
+                    <td className="px-4 py-4">{formatDateTime(sale.createdAt)}</td>
 
-                  <td className="px-4 py-4 font-semibold">
-                    {formatMoneyARS(sale.total)}
-                  </td>
+                    <td className="px-4 py-4">
+                      <div className="font-semibold">
+                        {formatMoneyARS(sale.total)}
+                      </div>
+                    </td>
 
-                  <td className="px-4 py-4">{sale.items.length}</td>
+                    <td className="px-4 py-4">{sale.items.length}</td>
 
-                  <td className="px-4 py-4">
-                    {sale.items
-                      .slice(0, 2)
-                      .map((i) => i.product.name)
-                      .join(", ")}
-                    {sale.items.length > 2 ? "…" : ""}
-                  </td>
+                    <td className="px-4 py-4">
+                      {sale.items
+                        .slice(0, 2)
+                        .map((i) => i.product.name)
+                        .join(", ")}
+                      {sale.items.length > 2 ? "…" : ""}
+                    </td>
 
-                  <td className="px-4 py-4">
-                    <Link
-                      href={`/ventas/${sale.id}`}
-                      className="text-muted-foreground hover:text-foreground inline-flex"
-                      aria-label="Ver venta"
-                    >
-                      <Eye className="h-5 w-5" />
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+                    <td className="px-4 py-4">
+                      <Link
+                        href={`/ventas/${sale.id}`}
+                        className="text-muted-foreground hover:text-foreground inline-flex"
+                        aria-label="Ver venta"
+                      >
+                        <Eye className="h-5 w-5" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              : null}
           </tbody>
         </table>
       </div>

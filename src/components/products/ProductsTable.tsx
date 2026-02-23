@@ -20,6 +20,12 @@ function formatDate(iso?: string | null) {
   });
 }
 
+function formatPrice(v: string | number) {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return "—";
+  return `$${n.toFixed(2)}`;
+}
+
 export function ProductsTable({ refreshKey = 0 }: { refreshKey?: number }) {
   const router = useRouter();
 
@@ -58,64 +64,76 @@ export function ProductsTable({ refreshKey = 0 }: { refreshKey?: number }) {
   const [deleteOpen, setDeleteOpen] = React.useState(false);
 
   return (
-    <div>
-      <TableToolbar
-        value={q}
-        onChange={setQ}
-        placeholder="Buscar por producto o categoría..."
-      />
+  <div>
+    <TableToolbar
+      value={q}
+      onChange={setQ}
+      placeholder="Buscar por producto o categoría..."
+    />
 
-      {error ? (
-        <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive mb-4">
-          {error}
-        </div>
-      ) : null}
+    {error ? (
+      <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive mb-4">
+        {error}
+      </div>
+    ) : null}
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-[#f9fafb] text-xs uppercase tracking-wide text-muted-foreground">
-            <tr className="border-b">
-              <th className="text-left font-medium px-4 py-3">Producto</th>
-              <th className="text-left font-medium px-4 py-3">Categoría</th>
-              <th className="text-left font-medium px-4 py-3">Precio</th>
-              <th className="text-left font-medium px-4 py-3">Creado</th>
-              <th className="text-left font-medium px-4 py-3">Acciones</th>
-            </tr>
-          </thead>
+    <div className="mt-4 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white">
+      <table className="w-full text-sm">
+        <thead className="bg-[#f9fafb] text-xs uppercase tracking-wide text-muted-foreground">
+          <tr className="border-b border-slate-200">
+            <th className="text-left font-medium px-4 py-3">Producto</th>
+            <th className="text-left font-medium px-4 py-3">Categoría</th>
+            <th className="text-left font-medium px-4 py-3">Precio</th>
+            <th className="text-left font-medium px-4 py-3">Creado</th>
+            <th className="text-left font-medium px-4 py-3">Acciones</th>
+          </tr>
+        </thead>
 
-          <tbody>
-            <TableStateRows
-              colSpan={5}
-              loading={loading}
-              isEmpty={!loading && filtered.length === 0}
-              loadingText="Cargando productos..."
-              emptyText="No hay productos para mostrar."
-            />
+        <tbody>
+          <TableStateRows
+            colSpan={5}
+            loading={loading}
+            isEmpty={!loading && filtered.length === 0}
+            loadingText="Cargando productos..."
+            emptyText="No hay productos para mostrar."
+          />
 
-            {!loading &&
-              filtered.length > 0 &&
-              filtered.map((product) => (
+          {!loading && filtered.length > 0
+            ? filtered.map((product) => (
                 <tr
                   key={product.id}
-                  className="border-b last:border-b-0 hover:bg-[#fafafa] transition-colors"
+                  className="border-b border-slate-200 last:border-b-0 hover:bg-[#fafafa] transition-colors"
                 >
-                  <td className="px-4 py-4 font-semibold">{product.name}</td>
-
-                  <td className="px-4 py-4">{product.categoryName}</td>
-
-                  <td className="px-4 py-4 font-semibold">
-                    ${Number(product.price).toFixed(2)}
+                  <td className="px-4 py-4">
+                    <div className="font-semibold">{product.name}</div>
+                    <div className="text-muted-foreground text-xs">
+                      ID: {product.id.slice(-8).toUpperCase()}
+                    </div>
                   </td>
 
-                  <td className="px-4 py-4 text-muted-foreground text-xs">
-                    {formatDate(product.createdAt)}
+                  <td className="px-4 py-4">
+                    {product.categoryName ?? "—"}
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <div className="font-semibold">
+                      {formatPrice(product.price)}
+                    </div>
+                  </td>
+
+                  <td className="px-4 py-4">
+                    <div className="text-muted-foreground text-xs">
+                      {formatDate(product.createdAt)}
+                    </div>
                   </td>
 
                   <td className="px-4 py-4">
                     <div className="flex gap-3">
                       <button
                         className="text-blue-600 text-sm hover:underline"
-                        onClick={() => router.push(`/productos/${product.id}/edit`)}
+                        onClick={() =>
+                          router.push(`/productos/${product.id}/edit`)
+                        }
                       >
                         Editar
                       </button>
@@ -132,29 +150,30 @@ export function ProductsTable({ refreshKey = 0 }: { refreshKey?: number }) {
                     </div>
                   </td>
                 </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
-
-      <PaginationControls
-        page={page}
-        totalPages={totalPages}
-        loading={loading}
-        onPrev={() => setPage((p) => Math.max(1, p - 1))}
-        onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
-      />
-
-      <DeleteProductDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        productId={selected?.id ?? null}
-        productName={selected?.name ?? null}
-        onDeleted={() => {
-          setSelected(null);
-          refetch();
-        }}
-      />
+              ))
+            : null}
+        </tbody>
+      </table>
     </div>
-  );
+
+    <PaginationControls
+      page={page}
+      totalPages={totalPages}
+      loading={loading}
+      onPrev={() => setPage((p) => Math.max(1, p - 1))}
+      onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+    />
+
+    <DeleteProductDialog
+      open={deleteOpen}
+      onOpenChange={setDeleteOpen}
+      productId={selected?.id ?? null}
+      productName={selected?.name ?? null}
+      onDeleted={() => {
+        setSelected(null);
+        refetch();
+      }}
+    />
+  </div>
+);
 }

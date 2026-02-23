@@ -5,7 +5,7 @@ const API_URL = process.env.API_URL!;
 
 export async function GET(req: Request) {
   try {
-    const token = (await cookies()).get("access_token")?.value; // <- sin await
+    const token = (await cookies()).get("access_token")?.value;
 
     if (!token) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

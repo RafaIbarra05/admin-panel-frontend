@@ -25,13 +25,11 @@ import {
 } from "@/lib/api/products";
 
 type Mode = "create" | "edit";
-
 const NONE = "__none__";
 
 function parseMoneyToNumber(value: string | number | null | undefined) {
   if (value == null) return NaN;
   if (typeof value === "number") return value;
-  // "1500.00" -> 1500
   const n = Number(value);
   return Number.isFinite(n) ? n : NaN;
 }
@@ -46,12 +44,11 @@ export function ProductFormView({
   const router = useRouter();
 
   const [loading, setLoading] = React.useState(false);
-
   const [categories, setCategories] = React.useState<Category[]>([]);
 
   const [name, setName] = React.useState("");
-  const [price, setPrice] = React.useState<string>(""); // input string
-  const [position, setPosition] = React.useState<string>("0"); // input string
+  const [price, setPrice] = React.useState<string>("");
+  const [position, setPosition] = React.useState<string>("0");
   const [categoryId, setCategoryId] = React.useState<string>(NONE);
 
   const priceNumber = parseMoneyToNumber(price);
@@ -72,7 +69,6 @@ export function ProductFormView({
       try {
         setLoading(true);
 
-        // categorías (paginadas en tu API)
         const cats = await listCategories({ page: 1, limit: 200 });
         if (!cancelled) setCategories(cats.data);
 
@@ -82,15 +78,12 @@ export function ProductFormView({
 
           if (!cancelled) {
             setName(p.name ?? "");
-            setPrice(String(parseMoneyToNumber(p.price))); // "1500.00" => "1500"
+            setPrice(String(parseMoneyToNumber(p.price)));
             setPosition(String(p.position ?? 0));
             setCategoryId(p.categoryId ?? NONE);
           }
         } else {
-          // defaults create
-          if (!cancelled) {
-            setCategoryId(NONE);
-          }
+          if (!cancelled) setCategoryId(NONE);
         }
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Error cargando formulario");
@@ -110,14 +103,10 @@ export function ProductFormView({
 
       const payload = {
         name: name.trim(),
-        price: priceNumber, // number ✅
-        position: positionNumber, // number ✅
-        categoryId: categoryId === NONE ? null : categoryId, // ajustá según tu backend
+        price: priceNumber,
+        position: positionNumber,
+        categoryId: categoryId === NONE ? null : categoryId,
       };
-
-      // Si tu backend REQUIERE categoryId siempre, reemplazá por:
-      // if (categoryId === NONE) throw new Error("Seleccioná una categoría.");
-      // y mandá categoryId sin null.
 
       if (mode === "create") {
         await createProduct(payload as any);
@@ -138,15 +127,15 @@ export function ProductFormView({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header simple */}
-      <div className="flex items-center justify-between">
+    <div className="max-w-7xl w-full space-y-6">
+      {/* Header consistente */}
+      <div className="flex items-center justify-between gap-3">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">
+          <h1 className="text-3xl font-semibold tracking-tight">
             {mode === "create" ? "Crear producto" : "Editar producto"}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Vista wrapper que reutiliza el mismo formulario (create/edit).
+            Completá la información del producto.
           </p>
         </div>
 
@@ -169,7 +158,8 @@ export function ProductFormView({
         </div>
       </div>
 
-      <div className="rounded-xl border bg-white p-6 space-y-5">
+      {/* Card como tus tablas */}
+      <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-sm space-y-5">
         <div className="grid gap-2">
           <Label>Nombre *</Label>
           <Input

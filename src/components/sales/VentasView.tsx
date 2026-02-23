@@ -9,17 +9,26 @@ export function VentasView() {
   const [refreshKey, setRefreshKey] = React.useState(0);
 
   return (
-    <div className="max-w-7xl w-full">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">Ventas</h1>
+    <div className="max-w-7xl w-full space-y-6">
+      {/* Header unificado */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Ventas
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Gestioná y supervisá las ventas del ecommerce.
+          </p>
+        </div>
 
         <VentasClient onCreated={() => setRefreshKey((k) => k + 1)} />
       </div>
 
-      <Card className="rounded-2xl border border-[#e5e7eb] shadow-sm">
+      {/* Card estandarizada */}
+      <Card className="rounded-xl border border-slate-200/60 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold">
-            Listado de Ventas
+            Listado de ventas
           </CardTitle>
         </CardHeader>
 

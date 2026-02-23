@@ -26,38 +26,43 @@ export function Topbar({ breadcrumb }: { breadcrumb: string }) {
         return;
       }
 
-      // Re-ejecuta middleware y refresca estado
       router.refresh();
-      // Te manda al login
       router.push("/login");
     } catch (error) {
       console.error("Error de red al cerrar sesión", error);
     }
   };
+
   const initials =
     user?.email?.slice(0, 2).toUpperCase() ?? (loading ? ".." : "??");
+
   return (
-    <header className="h-14 bg-white border-b">
+    <header className="h-14 bg-white">
       <div className="h-full px-6 flex items-center justify-between">
         <div className="text-sm text-muted-foreground">{breadcrumb}</div>
 
         <div className="flex items-center gap-4">
           <Bell className="h-5 w-5 text-muted-foreground" />
           <Sun className="h-5 w-5 text-muted-foreground" />
-          <Separator orientation="vertical" className="h-6" />
+          <Separator orientation="vertical" className="h-6 opacity-60" />
 
-          {/* Avatar + Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button type="button" className="rounded-full focus:outline-none">
-            <Avatar className="h-8 w-8">
+                <Avatar className="h-8 w-8">
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+            <DropdownMenuContent
+              align="end"
+              className="w-48 bg-white shadow-md border border-slate-200"
+            >
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="cursor-pointer"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Cerrar sesión
               </DropdownMenuItem>
